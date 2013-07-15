@@ -1,0 +1,8 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUST_FILENAME} !-d
+RewriteRule ^([^/]+)$ /m/index.php?u=$1 [L]
+</IfModule>

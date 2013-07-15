@@ -1,0 +1,11 @@
+span, td
+{
+	color:#555555;
+	font-size: 11px;
+	font-family: "Verdana", "Tahoma", "Arial", "Helvetica", sans-serif;
+}
+.poggawedka_avatar
+{
+	vertical-align:middle;
+	width:16px;
+}
