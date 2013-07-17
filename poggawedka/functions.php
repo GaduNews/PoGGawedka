@@ -7,7 +7,7 @@ function helpMessage($ggid)
 	$gender=getGender($ggid);
 	$sufix="y"; if($gender==PLEC_KOBIETA){$sufix="a";}
 	
-	$M->addBBcode("Wpisz:\n[b]!start[/b] jeśli chcesz dołączyć do rozmowy\n[b]!stop[/b] jeśli chcesz opuścić rozmowę\n[b]!nick [i]nowy_nick[/i][/b] jeśli chcesz zmienić swój pseudonim na [i]nowy_nick[/i]. Jeśli nie wpiszesz nowego pseudonimu, wyświetlimy Ci Twój aktualny.\n[b]!avatar [i]nick_użytkownika[/i][/b] jeśli chcesz zobaczyć awatar danej osoby jaki ma ustawiony w sieci GG\n[b]!oczekuj[/b] jeśli chcesz zmienić tryb dostarczania wiadomości offline z czatu. Jeśli będziesz niedostępn".$sufix." to w zależności od ustawienia wiadomości z aktywnego czatu będą lub nie będą do Ciebie wysyłane\n[b]!online[/b] wyświetla listę użytkowników, którzy widzą aktualną konwersację na czacie (użyli opcji !start)\n[b]!raportuj [i]wiadomość[/i][/b] jeśli chcesz zgłosić jakieś nadużycie. Treść [i]wiadomości[/i] zostanie wysłana do wszystkich moderatorów, również nieaktywnych\n\n\nKomendy działające tylko jeśli jesteś aktywny na czacie (komenda [i]!start[/i])\n[b]>nick_użytkownika [i]wiadomość[/i][/b] jeśli chcesz wysłać wiadomość do danej osoby (wiadomości dochodzą nawet jeśli osoba jest nieaktywna).\n[b]@nick_użytkownika[/b] jeśli chcesz wspomnieć o kimś w ramach rozmowy. Jeśli osoba nie jest aktywna na czacie, dostanie powiadomienie o odniesieniu się niej.\n\nWięcej informacji (w tym archiwum rozmów): http://gadunews.pl/?p=1462");
+	$M->addBBcode("Wpisz:\n[b]!start[/b] jeśli chcesz dołączyć do rozmowy\n[b]!stop[/b] jeśli chcesz opuścić rozmowę\n[b]!nick [i]nowy_nick[/i][/b] jeśli chcesz zmienić swój pseudonim na [i]nowy_nick[/i]. Jeśli nie wpiszesz nowego pseudonimu, wyświetlimy Ci Twój aktualny.\n[b]!avatar [i]nick_użytkownika[/i][/b] jeśli chcesz zobaczyć awatar danej osoby jaki ma ustawiony w sieci GG\n[b]!oczekuj[/b] jeśli chcesz zmienić tryb dostarczania wiadomości offline z czatu. Jeśli będziesz niedostępn".$sufix." to w zależności od ustawienia wiadomości z aktywnego czatu będą lub nie będą do Ciebie wysyłane\n[b]!online[/b] wyświetla listę użytkowników, którzy widzą aktualną konwersację na czacie (użyli opcji !start)\n[b]!ranking[/b] gdy chcesz zobaczyć ranking(TOP 20)\n[b]!raportuj [i]wiadomość[/i][/b] jeśli chcesz zgłosić jakieś nadużycie. Treść [i]wiadomości[/i] zostanie wysłana do wszystkich moderatorów, również nieaktywnych\n\n\nKomendy działające tylko jeśli jesteś aktywny na czacie (komenda [i]!start[/i])\n[b]>nick_użytkownika [i]wiadomość[/i][/b] jeśli chcesz wysłać wiadomość do danej osoby (wiadomości dochodzą nawet jeśli osoba jest nieaktywna).\n[b]@nick_użytkownika[/b] jeśli chcesz wspomnieć o kimś w ramach rozmowy. Jeśli osoba nie jest aktywna na czacie, dostanie powiadomienie o odniesieniu się niej.\n\nWięcej informacji (w tym archiwum rozmów): http://gadunews.pl/?p=1462");
 }
 
 function newUserAddedToDataBase($username)
@@ -44,6 +44,43 @@ function getLastMessages($count) //używane przy !start w pierwszych wersjach Po
 	
 	
 }*/
+
+function commandTop(){
+	global $mysqli;
+	global $M;
+	$date_yesterday = date("d.m.Y",time()-(60*60*24));
+	$sql="SELECT nickname, count( message ) AS ile FROM `messages` JOIN users ON messages.ggid = users.ggid WHERE `timestamp` >= CURDATE( ) -1 AND `timestamp` < CURDATE( ) GROUP BY nickname ORDER BY ile DESC LIMIT 0 , 20";
+	$i=1;
+	$message_top = "TOP 20\n\nDzień ".$date_yesterday."\n";
+	if ($result = $mysqli->query($sql, MYSQLI_USE_RESULT))
+	{		
+		while($row = $result->fetch_array())
+		{
+			$message_top .= $i.". ";
+			$i++;
+			$message_top .= $row['nickname']." ";
+			$message_top .= $row['ile'];
+			$message_top .= "\n";
+		}
+	}
+	$result->close();
+	$sql="SELECT nickname, count( message ) AS ile FROM `messages` JOIN users ON messages.ggid = users.ggid GROUP BY nickname ORDER BY ile DESC LIMIT 0 , 20";
+	$i=1;
+	$message_top .= "\nCałokształt\n";
+	if ($result = $mysqli->query($sql, MYSQLI_USE_RESULT))
+	{		
+		while($row = $result->fetch_array())
+		{
+			$message_top .= $i.". ";
+			$i++;
+			$message_top .= $row['nickname']." ";
+			$message_top .= $row['ile'];
+			$message_top .= "\n";
+		}
+	}
+	$result->close();
+	$M=createSystemMessage(HINT_MESSAGE,$message_top,"");
+}
 
 function commandRaport($ggid_from,$raport, &$M)
 {
