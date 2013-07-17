@@ -108,6 +108,11 @@ else if($HTTP_RAW_POST_DATA[0]=='!') //czyli komendy
 	{
 		commandOnline();
 	}
+	else if(strtolower($command[0])=='!ranking')
+	{
+		commandTop();
+	}
+	
 	else if(strtolower($command[0])=='!raport' || strtolower($command[0])=='!raportuj')
 	{
 		$raport=trim(str_replace($command[0],"",$HTTP_RAW_POST_DATA));
