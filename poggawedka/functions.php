@@ -201,6 +201,9 @@ function commandOnline()
 			
 			
 		}
+		if($usersActiveOnlyOnline == "Użytkownicy aktywni, ale niepołączeni (otrzymają wiadomości po zalogowaniu): \n\t"){
+			$usersActiveOnlyOnline = ""; //Wyczyszczenie, jeżeli brak niepołączonych, przez co zabobiegamy wyświetlaniu zbędnych informacji
+		}
 		$result->close();
 	}
 	
