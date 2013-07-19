@@ -4,6 +4,7 @@ $APP_ID_NAME="";
 $APP_VERSION="";
 $APP_COPY_OWNER=""; //wpisujemy swój nick lub nazwę strony www w jakiej działa czat
 
+
 #### SEKCJA DLA XMPP
 /* XMPP jest protokołem przesyłania wiadomości w czasie rzeczywistym. Używany jest w komunikatorach takich jak AQQ, Google Talk, Tlen czy Facebook Chat i NKTalk. Skonfigurowanie konta XMPP pozwoli Ci na otrzymywanie raportów (komenda !raportuj) również w tej sieci, np. bezpośrednio na facebooka lub na telefon z systemem Android (każdy taki telefon posiada wbudowany działający w tle komunikator Google TALK). Listę identyfikatorów należy podać w tabeli `settings` w rekordzie `reports_xmpp` (każdy identyfikator oddzielony przecinkiem).*/
 $xmpp_config['host']='jid.pl'; //nazwa hosta
