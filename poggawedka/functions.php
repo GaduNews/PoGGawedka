@@ -170,6 +170,54 @@ function commandBan($nickname, $ban=true)
 	
 }
 
+function convert_datetime($str) { 
+
+    list($date, $time) = explode(' ', $str); 
+    list($year, $month, $day) = explode('-', $date); 
+    list($hour, $minute, $second) = explode(':', $time); 
+     
+    $timestamp = mktime($hour, $minute, $second, $month, $day, $year); 
+     
+    return $timestamp; 
+} 
+
+function commandKickIdle()
+{
+	global $M;
+	global $mysqli;
+	$sql = "SELECT * FROM `users` WHERE `active_channel` = 1";
+	$result = $mysqli->query($sql);
+	$numbersOnline = array();
+	$i=0;
+	while($numberOnline = $result->fetch_assoc()){
+		$numbersOnline[$i]['oczekuj'] = $numberOnline['active_only_when_online'];
+		$numbersOnline[$i]['nr'] = $numberOnline['ggid'];
+		$i++;
+	}
+	require_once('push.php');
+	for($i=0;$i<count($numbersOnline);$i++){
+		$sql = "SELECT `timestamp` FROM `messages` WHERE `ggid` = ".$numbersOnline[$i]['nr']." ORDER BY `timestamp` DESC LIMIT 1";
+		$result = $mysqli->query($sql);
+		$checkTime = $result->fetch_assoc();
+		$checkTimeUNIX = convert_datetime($checkTime['timestamp']);
+		if($numbersOnline[$i]['oczekuj'] == 0)
+		{
+			if($checkTimeUNIX < time()-3600)
+			{
+				$mysqli->query("UPDATE `users` SET `active_channel` = 0 WHERE `ggid` = ".$numbersOnline[$i]['nr']);
+				sendSystemMessageToUsers("Zostałeś wylogowany z powodu nieaktywności","",$numbersOnline[$i]['nr']);
+			}
+		}elseif($numbersOnline[$i]['oczekuj'] == 1)
+		{
+			if($checkTimeUNIX < time()-259200)
+			{
+				$mysqli->query("UPDATE `users` SET `active_channel` = 0 WHERE `ggid` = ".$numbersOnline[$i]['nr']);
+				sendSystemMessageToUsers("Zostałeś wylogowany z powodu nieaktywności","",$numbersOnline[$i]['nr']);
+			}
+		}
+	}
+}
+
 function commandOnline()
 {
 	$sql="SELECT ggid,nickname, active_only_when_online FROM `users` WHERE `active_channel` =1 AND banned = 0 ORDER BY `users`.`nickname` ASC";
@@ -232,7 +280,7 @@ function getGender($ggid)
 	return $plec->gender[0];
 }
 
-function commandStartStop($ggid,$start,$silent=false)
+function commandStartStop($ggid,$start,$silent=false,$idle=false)
 {
 	$gender=getGender($ggid);
 	//var_dump($gender);
@@ -280,7 +328,11 @@ function commandStartStop($ggid,$start,$silent=false)
 	}
 	else
 	{
-		$M->addBBcode("[b]Opuścił".$sufix['2LP']."ś czat.[/b]");
+		$idle_msg = "";
+		if($idle){
+			$idle_msg = "[br]Zostałeś wylogowany z powodu nieaktywności";
+		}
+		$M->addBBcode("[b]Opuścił".$sufix['2LP']."ś czat.[/b]".$idle_msg);
 		if($silent==false){
 			adminMessage("[b]".getNick($ggid)."[/b] opuścił".$sufix['3LP']." czat...",true,false,'icons/information.png','0000FF');
 		}
@@ -513,6 +565,7 @@ define('RULE_BAN',4);
 define('RULE_KICK',5); 
 define('RULE_ABUSE',6); 
 define('RULE_UNBAN',7);
+define('RULE_IDLE', 8);
 function createSystemMessage($type,$p1=null,$p2=null)
 {
 	$M=new MessageBuilder();
@@ -567,6 +620,12 @@ function createSystemMessage($type,$p1=null,$p2=null)
 	{
 		$M->addImage('icons/warning.png');	
 		$M->addBBcode(" [color=FF0000][b]Raport od [u]".$p1."[/u][/b][/color]:\n\t".$p2);
+		
+	}
+	else if($type==RULE_IDLE) //p1 - nick wyrzuconego
+	{
+		$M->addImage('icons/information2.png');	
+		$M->addBBcode("[color=0000FF]Twoje konto zostało wylogowane z powodu nieaktywności.[/color]");
 		
 	}
 	return $M;
