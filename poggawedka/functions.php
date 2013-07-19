@@ -170,6 +170,56 @@ function commandBan($nickname, $ban=true)
 	
 }
 
+function convert_datetime($str) { 
+
+    list($date, $time) = explode(' ', $str); 
+    list($year, $month, $day) = explode('-', $date); 
+    list($hour, $minute, $second) = explode(':', $time); 
+     
+    $timestamp = mktime($hour, $minute, $second, $month, $day, $year); 
+     
+    return $timestamp; 
+} 
+
+function commandKickIdle()
+{
+	global $M;
+	global $mysqli;
+	$sql = "SELECT * FROM `users` WHERE `active_channel` = 1";
+	$result = $mysqli($sql);
+	$numbersOnline = array();
+	$i=0;
+	while($numberOnline = $result->fetch_assoc()){
+		$numbersOnline[$i]['oczekuj'] = $numberOnline['active_only_when_online'];
+		$numbersOnline[$i]['nr'] = $numberOnline['ggid'];
+		$i++;
+	}
+	for($i=0;$i<count($numbersOnline);$i++){
+		$sql = "SELECT `timestamp` FROM `logs` WHERE `ggid` = ".$numbersOnline[$i]['nr'];
+		$result = $mysqli($sql);
+		$checkTime = $result->fetch_assoc();
+		$checkTimeUNIX = convert_datetime($checkTime['timestamp']);
+		$kickNumbers = array();
+		if($numbersOnline[$i]['oczekuj'] == 0)
+		{
+			if($checkTimeUNIX < time()-3600)
+			{
+				commandStartStop($numbersOnline[$i]['nr'], false);
+				$kickNumbers[] = $numbersOnline[$i]['nr'];
+			}
+		}elseif($numbersOnline[$i]['oczekuj'] == 1)
+		{
+			if($checkTimeUNIX < time()-259200)
+			{
+				commandStartStop($numbersOnline[$i]['nr'], false);
+				$kickNumbers[] = $numbersOnline[$i]['nr'];
+			}
+		}
+	}
+	require_once('push.php');
+	sendSystemMessageToUsers("","",array($kickNumbers),RULE_IDLE);
+}
+
 function commandOnline()
 {
 	$sql="SELECT ggid,nickname, active_only_when_online FROM `users` WHERE `active_channel` =1 AND banned = 0 ORDER BY `users`.`nickname` ASC";
@@ -513,6 +563,7 @@ define('RULE_BAN',4);
 define('RULE_KICK',5); 
 define('RULE_ABUSE',6); 
 define('RULE_UNBAN',7);
+define('RULE_IDLE', 8);
 function createSystemMessage($type,$p1=null,$p2=null)
 {
 	$M=new MessageBuilder();
@@ -567,6 +618,12 @@ function createSystemMessage($type,$p1=null,$p2=null)
 	{
 		$M->addImage('icons/warning.png');	
 		$M->addBBcode(" [color=FF0000][b]Raport od [u]".$p1."[/u][/b][/color]:\n\t".$p2);
+		
+	}
+	else if($type==RULE_IDLE) //p1 - nick wyrzuconego
+	{
+		$M->addImage('icons/information2.png');	
+		$M->addBBcode("[color=0000FF]Twoje konto zostało wylogowane z powodu nieaktywności.[/color]");
 		
 	}
 	return $M;
