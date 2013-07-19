@@ -136,6 +136,17 @@ else if($HTTP_RAW_POST_DATA[0]=='!') //czyli komendy
 			$M=createSystemMessage(HINT_MESSAGE,'Nie masz uprawnień do operacji zmiany opisu/statusu');
 		}
 	}
+	else if(strtolower($command[0])=='!kickidle')
+	{
+		if(isModerator($_GET['from']))
+		{
+			commandKickIdle();
+		}
+		else
+		{
+			$M=createSystemMessage(HINT_MESSAGE,'Nie masz uprawnień do operacji zmiany opisu/statusu');
+		}
+	}
 	else if(strtolower($command[0])=='!stan')
 	{
 		$opis=str_replace($command[0]." ".$command[1],"",$HTTP_RAW_POST_DATA);
